@@ -10,5 +10,3 @@ Here is some practice to implement the example in Head First Design Patterns wit
 - Book Example
 - C# IObservable
 - C# IObservable Unit Test
-
-**remark: study the unsubscriber**
