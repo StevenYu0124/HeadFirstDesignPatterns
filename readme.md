@@ -8,7 +8,7 @@ Here is some practice to implement the example in Head First Design Patterns wit
 
 ## Chapter 2 - Observer Pattern
 - Book Example
-- C# IObservable Push
-- C# IObservable Pull (Pending)
+- C# IObservable
+- C# IObservable Unit Test
 
 **remark: study the unsubscriber**
