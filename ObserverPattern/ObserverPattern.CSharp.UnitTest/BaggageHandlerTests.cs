@@ -97,4 +97,19 @@ public class BaggageHandlerTests
         // Assert
         subscriber.Verify(x => x.OnNext(baggageInfo), Times.Never);
     }
+
+    [Test]
+    public void LastBaggageClaimed_WhenCalled_ReturnVoid()
+    {
+        // Arrange
+        var baggageHandler = new BaggageHandler();
+        var subscriber = new Mock<IObserver<BaggageInfo>>();
+        baggageHandler.Subscribe(subscriber.Object);
+
+        // Act
+        baggageHandler.LastBaggageClaimed();
+
+        // Assert
+        subscriber.Verify(x => x.OnCompleted(), Times.Once);
+    }
 }

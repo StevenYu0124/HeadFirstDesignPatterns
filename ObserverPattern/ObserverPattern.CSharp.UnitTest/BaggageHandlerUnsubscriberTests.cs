@@ -1,16 +1,19 @@
 public class BaggageHandlerUnsubscriberTests
 {
     [Test]
-    public void UnsubscriberDispose_WhenCalled_ReturnVoid()
+    public void UnsubscriberDispose_WhenDispose_OnNextNotCalled()
     {
         // Arrange
         var baggageHandler = new BaggageHandler();
         var subscriber = new Mock<IObserver<BaggageInfo>>();
-        var disposable = baggageHandler.Subscribe(subscriber.Object);
+        var unsubscriber = baggageHandler.Subscribe(subscriber.Object);
+        var baggageInfo = new BaggageInfo();
 
         // Act
-        disposable.Dispose();
+        unsubscriber.Dispose();
+        baggageHandler.UpdateBaggageInfo(baggageInfo);
 
         // Assert
+        subscriber.Verify(x => x.OnNext(It.IsAny<BaggageInfo>()), Times.Never);
     }
 }

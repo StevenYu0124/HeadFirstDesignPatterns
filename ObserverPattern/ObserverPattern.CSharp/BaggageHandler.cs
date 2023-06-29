@@ -37,6 +37,15 @@ public sealed class BaggageHandler : IObservable<BaggageInfo>
         }
     }
 
+    public void LastBaggageClaimed()
+    {
+        foreach (var observer in observers)
+        {
+            observer.OnCompleted();
+        }
+        baggageInfos.Clear();
+    }
+
     private class Unsubscriber<BaggageInfo> : IDisposable
     {
         private readonly ISet<IObserver<BaggageInfo>> observers;
