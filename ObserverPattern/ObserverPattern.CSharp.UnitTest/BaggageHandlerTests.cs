@@ -46,6 +46,26 @@ public class BaggageHandlerTests
         // Assert
         subscriber.Verify(x => x.OnNext(baggageInfo), Times.Once);
     }
+
+    [Test]
+    public void UpdateBaggageInfo_WhenThrowException_CallOnError()
+    {
+        // Arrange
+        var baggageHandler = new BaggageHandler();
+        var subscriber = new Mock<IObserver<BaggageInfo>>();
+        baggageHandler.Subscribe(subscriber.Object);
+        var baggageInfo = new BaggageInfo();
+        var exception = new Exception();
+        subscriber
+            .Setup(x => x.OnNext(baggageInfo))
+            .Throws(exception);
+
+        // Act
+        baggageHandler.UpdateBaggageInfo(baggageInfo);
+
+        // Assert
+        subscriber.Verify(x => x.OnError(exception), Times.Once);
+    }
     
     [Test]
     public void RemoveBaggageInfo_WhenCalled_ReturnVoid()
@@ -96,6 +116,27 @@ public class BaggageHandlerTests
 
         // Assert
         subscriber.Verify(x => x.OnNext(baggageInfo), Times.Never);
+    }
+
+    [Test]
+    public void RemoveBaggageInfo_WhenThrowException_CallOnError()
+    {
+        // Arrange
+        var baggageHandler = new BaggageHandler();
+        var subscriber = new Mock<IObserver<BaggageInfo>>();
+        var baggageInfo = new BaggageInfo();
+        var exception = new Exception();
+        baggageHandler.Subscribe(subscriber.Object);
+        baggageHandler.UpdateBaggageInfo(baggageInfo);
+        subscriber
+            .Setup(x => x.OnNext(baggageInfo))
+            .Throws(exception);
+
+        // Act
+        baggageHandler.RemoveBaggageInfo(baggageInfo);
+
+        // Assert
+        subscriber.Verify(x => x.OnError(exception), Times.Once);
     }
 
     [Test]

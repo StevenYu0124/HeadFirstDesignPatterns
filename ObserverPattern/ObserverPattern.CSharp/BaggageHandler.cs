@@ -1,17 +1,20 @@
 public sealed class BaggageHandler : IObservable<BaggageInfo>
 {
-    private HashSet<IObserver<BaggageInfo>> observers;
+    // thread safe
+    // use ConcurrentDictionary to implement a thread safe hashset
+    // https://stackoverflow.com/questions/18922985/concurrent-hashsett-in-net-framework
+    private ConcurrentDictionary<IObserver<BaggageInfo>, byte> observers;
     private HashSet<BaggageInfo> baggageInfos;
 
     public BaggageHandler()
     {
-        observers = new HashSet<IObserver<BaggageInfo>>();
+        observers = new ConcurrentDictionary<IObserver<BaggageInfo>, byte>();
         baggageInfos = new HashSet<BaggageInfo>();
     }
 
     public IDisposable Subscribe(IObserver<BaggageInfo> observer)
     {
-        observers.Add(observer);
+        observers.TryAdd(observer, 0);
         return new Unsubscriber<BaggageInfo>(observers, observer);
     }
 
@@ -19,9 +22,16 @@ public sealed class BaggageHandler : IObservable<BaggageInfo>
     {
         if (baggageInfos.Add(baggageInfo))
         {
-            foreach (var observer in observers)
+            foreach (var observer in observers.Keys)
             {
-                observer.OnNext(baggageInfo);
+                try
+                {
+                    observer.OnNext(baggageInfo);
+                }
+                catch (Exception ex)
+                {
+                    observer.OnError(ex);
+                }
             }
         }
     }
@@ -30,16 +40,23 @@ public sealed class BaggageHandler : IObservable<BaggageInfo>
     {
         if (baggageInfos.Remove(baggageInfo))
         {
-            foreach (var observer in observers)
+            foreach (var observer in observers.Keys)
             {
-                observer.OnNext(baggageInfo);
+                try
+                {
+                    observer.OnNext(baggageInfo);
+                }
+                catch (Exception ex)
+                {
+                    observer.OnError(ex);
+                }
             }
         }
     }
 
     public void LastBaggageClaimed()
     {
-        foreach (var observer in observers)
+        foreach (var observer in observers.Keys)
         {
             observer.OnCompleted();
         }
@@ -48,11 +65,11 @@ public sealed class BaggageHandler : IObservable<BaggageInfo>
 
     private class Unsubscriber<BaggageInfo> : IDisposable
     {
-        private readonly ISet<IObserver<BaggageInfo>> observers;
+        private readonly ConcurrentDictionary<IObserver<BaggageInfo>, byte> observers;
         private readonly IObserver<BaggageInfo> observer;
 
         public Unsubscriber(
-            ISet<IObserver<BaggageInfo>> observers,
+            ConcurrentDictionary<IObserver<BaggageInfo>, byte> observers,
             IObserver<BaggageInfo> observer)
         {
             this.observers = observers;
@@ -61,7 +78,7 @@ public sealed class BaggageHandler : IObservable<BaggageInfo>
 
         public void Dispose()
         {
-            observers.Remove(observer);
+            observers.Remove(observer, out _);
         }
     }
 }
